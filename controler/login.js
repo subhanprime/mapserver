@@ -66,7 +66,6 @@ export const login = async (req, res) => {
           favoritesList: islogin?.favoritesList,
           follows: islogin?.follows,
         };
-
         return res.status(200).json({
           message: "user login successfully with Wallet Address",
           status: "ok",

@@ -274,6 +274,7 @@ export const getUserNfts = async (req, res) => {
       .limit(limit * 1)
       .skip((page - 1) * limit)
       .exec();
+
     if (data) {
       return res.status(200).json({
         status: "ok",
