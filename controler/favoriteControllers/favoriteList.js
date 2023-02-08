@@ -4,7 +4,7 @@ import cellModal from "../../modal/buycells.js";
 export const favoritesList = async (req, res) => {
   try {
     const userId = req.body?.userId;
-    const nftId = req.body?.nftId; 
+    const nftId = req.body?.nftId;
     const nftDetail = await cellModal.findOne({ _id: nftId });
     const userDetail = await User.findOne({ _id: userId });
     if (nftDetail) {
