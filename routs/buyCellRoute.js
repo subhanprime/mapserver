@@ -31,12 +31,12 @@ import { fetchalluser } from "../controler/Fetchusers/fetchallusers.js";
 import { checkuser } from "../controler/Fetchusers/Checkuser.js";
 import { fetchFollowNfts } from "../controler/followController/FetchFollowNfts.js";
 import path from "path";
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 var __filename = fileURLToPath(import.meta.url);
 var reqPath = dirname(__filename);
-let __dirname = path.join(reqPath, '../')
-console.log(__dirname, "dirName-->")
+let __dirname = path.join(reqPath, "..");
+console.log(__dirname, "dirName-->");
 // var __dirname = path.resolve(path.dirname(""));
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {

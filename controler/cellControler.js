@@ -9,28 +9,24 @@ import { Contract } from "ethers";
 import { Abi } from "../Abi/abimap.js";
 import { ServerURL } from "../utils/url.js";
 import {
-  ETH_CONTRACT_ADDRESS,
-  GOERLI_KEY,
+  CONTRACT_ADDRESS,
+  KEY,
   WALLET_KEY,
 } from "../environment/index.js";
-import pendingTransactionsModal from "../modal/pendingTransactions.js";
+// import pendingTransactionsModal from "../modal/pendingTransactions.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 var __filename = fileURLToPath(import.meta.url);
 var reqPath = dirname(__filename);
-let __dirname = path.join(reqPath, "../");
-
-const provider = new ethers.providers.JsonRpcProvider(GOERLI_KEY);
+let __dirname = path.join(reqPath, "..");
+const provider = new ethers.providers.JsonRpcProvider(KEY);
 const voidAccount = new ethers.VoidSigner(WALLET_KEY, provider);
 const getData = async (_address, _ABI, _voidAccount) => {
   const constractAddress = await new Contract(_address, _ABI, _voidAccount);
-  const tokenId = (await constractAddress) && constractAddress?._tokenId();
+  const tokenId = (await constractAddress) && constractAddress?.totalSupply();
   return tokenId;
 };
-
-
-
 export const buyCell = async (req, res) => {
   try {
     const {
@@ -45,18 +41,19 @@ export const buyCell = async (req, res) => {
       discount,
       token,
       type,
+      mapaddress,
     } = req.body;
     // let price = Math.round(Number(areaLength) * Number(tilePrice)) - +discount;
     let price = Number(areaLength) * Number(tilePrice) - +discount;
     price = price.toFixed(2);
     let productPrice = +price;
     if (type === "stripe") {
-      const _tokenId = await getData(ETH_CONTRACT_ADDRESS, Abi, voidAccount);
+      const _tokenId = await getData(CONTRACT_ADDRESS, Abi, voidAccount);
 
       const product = {
-        name: "Global Land Nft",
+        name: " MetaCubes Nft",
         price: +price * 100,
-        description: "this is a global land Nft product",
+        description: "This is a MetaCubes Nft.",
       };
       const { charge, customer } = await checkOutHandler(product, token);
       if (charge && charge.status) {
@@ -73,14 +70,14 @@ export const buyCell = async (req, res) => {
             console.log("File is created successfully.");
           }
         );
-
         const newCell = await new cellModal({
           MinType: "stripe",
           nftId: +_tokenId + 1,
-          name: "Global Land Nft",
+          name: product.name,
           capturesImage: filename,
-          description: "this is a global land Nft product",
+          description: product.description,
           attributes: JSON.parse(totalceil),
+          mapaddress,
           user,
           lang,
           long,
@@ -97,7 +94,7 @@ export const buyCell = async (req, res) => {
         if (resCell) {
           let tokenuri = `${ServerURL}/tokenId/${+_tokenId + 1}`;
           const transactionDetails = await adminTransaction(address, tokenuri);
-          const { transaction, trx, message } = transactionDetails;
+          const { transaction, trx, err } = transactionDetails;
           if (transaction === "successful" && trx) {
             const updateStatus = await cellModal.findByIdAndUpdate(
               { _id: resCell._id },
@@ -117,9 +114,10 @@ export const buyCell = async (req, res) => {
               { paidStatusContract: false }
             );
             return res.json({
+              status: "failed",
               transaction,
               trx,
-              message: "something went wrong",
+              message: err,
             });
           }
         } else {
@@ -136,6 +134,8 @@ export const buyCell = async (req, res) => {
     console.log(err.message);
   }
 };
+
+
 // .........Transaction with wallet..........;
 export const buyCellWithWallet = async (req, res) => {
   try {
@@ -151,8 +151,9 @@ export const buyCellWithWallet = async (req, res) => {
       token,
       nftAmount,
       type,
+      mapaddress,
     } = req.body;
-    const _tokenId = await getData(ETH_CONTRACT_ADDRESS, Abi, voidAccount);
+    const _tokenId = await getData(CONTRACT_ADDRESS, Abi, voidAccount);
     //wallet tansactions;
     // frontendTransaction
     if (type === "wallet") {
@@ -173,15 +174,17 @@ export const buyCellWithWallet = async (req, res) => {
               console.log("File is created successfully.");
             }
           );
+
           let cellAmount = +nftAmount / 1000000;
           const newCell = await new cellModal({
             MinType: "wallet",
             nftId: +_tokenId + 1,
-            name: "Global Land Nft",
+            name: "MetaCubes Nft",
             capturesImage: filename,
             image: `${ServerURL}/upload/${filename}`,
-            description: "this is a global land Nft product",
+            description: "This is a MetaCubes Nft.",
             attributes: JSON.parse(totalceil),
+            mapaddress,
             user,
             lang,
             long,
@@ -203,7 +206,7 @@ export const buyCellWithWallet = async (req, res) => {
                 address,
                 tokenuri
               );
-              const { transaction, trx, message } = transactionDetails;
+              const { transaction, trx, err } = transactionDetails;
               if (transaction === "successful" && trx) {
                 const updateStatus = await cellModal.findByIdAndUpdate(
                   { _id: resCell._id },
@@ -224,9 +227,10 @@ export const buyCellWithWallet = async (req, res) => {
                 );
 
                 return res.json({
+                  status: "failed",
                   transaction,
                   trx,
-                  message: "something went wrong",
+                  message: err,
                 });
               }
             } else {
@@ -321,7 +325,7 @@ export const getNftsdetails = async (req, res) => {
 export const mintFailNft = async (req, res) => {
   const { _id, address } = req.body;
   try {
-    const _tokenId = await getData(ETH_CONTRACT_ADDRESS, Abi, voidAccount);
+    const _tokenId = await getData(CONTRACT_ADDRESS, Abi, voidAccount);
 
     if (_tokenId) {
       let tokenuri = `${ServerURL}/tokenId/${+_tokenId + 1}`;
@@ -377,11 +381,12 @@ export const mintNftByAdmin = async (req, res) => {
       token,
       nftAmount,
       type,
+      mapaddress,
     } = req.body;
 
     const userdata = await userModal.findOne({ wallet });
     if (userdata) {
-      const _tokenId = await getData(ETH_CONTRACT_ADDRESS, Abi, voidAccount);
+      const _tokenId = await getData(CONTRACT_ADDRESS, Abi, voidAccount);
       if (type === "admin") {
         let receipt = null;
         while (receipt === null) {
@@ -409,6 +414,7 @@ export const mintNftByAdmin = async (req, res) => {
               image: `${ServerURL}/upload/${filename}`,
               description: "this is a global land Nft product",
               attributes: JSON.parse(totalceil),
+              mapaddress,
               user: userdata?._id,
               lang,
               long,
@@ -477,6 +483,17 @@ export const mintNftByAdmin = async (req, res) => {
     console.log(err.message);
   }
 };
+
+
+
+
+
+
+
+
+
+
+
 
 // const updateNftStatus = async (data) => {
 //   let update = await cellModal.findOneAndUpdate(

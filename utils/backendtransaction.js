@@ -4,11 +4,10 @@ import ethers from "ethers";
 import { Contract } from "ethers";
 import { BigNumber } from "@ethersproject/bignumber";
 import { MaxUint256 } from "@ethersproject/constants";
-import { ETH_CONTRACT_ADDRESS, GOERLI_KEY } from "../environment/index.js";
-
-const provider = new ethers.providers.JsonRpcProvider(GOERLI_KEY);
+import { CONTRACT_ADDRESS, KEY } from "../environment/index.js";
+const provider = new ethers.providers.JsonRpcProvider(KEY);
 const signerEth = new ethers.Wallet(process.env.ADMIN_KEY, provider);
-const bridgeEth = new Contract(ETH_CONTRACT_ADDRESS, Abi, signerEth);
+const bridgeEth = new Contract(CONTRACT_ADDRESS, Abi, signerEth);
 const gasEstimationForAll = async (fn, data) => {
     const estimateGas = await fn(...data, MaxUint256).catch(() => {
         return fn(...data);
@@ -23,13 +22,9 @@ function calculateGasMargin(value) {
     ).toFixed(0);
 }
 
-
-
 export const adminTransaction = async (address, nftTokenUri) => {
-    console.log(process.env.ADMIN_KEY, "------->");
     try {
         let data = [address, nftTokenUri];
-
         let fn = await bridgeEth.estimateGas.safeMint;
         const tx = await bridgeEth.safeMint(...data, {
             gasLimit: gasEstimationForAll(fn, data),
