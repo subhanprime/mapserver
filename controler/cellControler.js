@@ -43,6 +43,7 @@ export const buyCell = async (req, res) => {
       type,
       mapaddress,
     } = req.body;
+
     // let price = Math.round(Number(areaLength) * Number(tilePrice)) - +discount;
     let price = Number(areaLength) * Number(tilePrice) - +discount;
     price = price.toFixed(2);

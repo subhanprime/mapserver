@@ -10,6 +10,7 @@ export const login = async (req, res) => {
       const token = Jwt.sign({ id: islogin?._id }, privateKey, {
         expiresIn: "1d",
       });
+      console.log("islogin:", islogin);
       if (islogin) {
         const matchpassword = await bcrypt.compare(password, islogin.password);
         if (matchpassword) {
